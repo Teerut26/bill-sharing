@@ -1,0 +1,91 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    // NOTE: When using mysql or sqlserver, uncomment the @db.Text annotations in model Account below
+    // Further reading:
+    // https://next-auth.js.org/adapters/prisma#create-the-prisma-schema
+    // https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#string
+    url      = env("DATABASE_URL")
+}
+
+model Trip {
+    id         String    @id @default(cuid())
+    name       String
+    location   String?
+    start_date DateTime?
+    end_date   DateTime?
+    owner      User      @relation("owner", fields: [ownerId], references: [id], onDelete: Cascade)
+    ownerId    String
+    members    User[]    @relation("members")
+    expense    expense[]
+    isPublic   Boolean   @default(true)
+    password   String?
+}
+
+model expense {
+    id                  String                @id @default(cuid())
+    name                String
+    amount              Int
+    tripId              String
+    trip                Trip                  @relation(fields: [tripId], references: [id], onDelete: Cascade)
+    owner               User                  @relation("expense_owner", fields: [ownerId], references: [id], onDelete: Cascade)
+    ownerId             String
+    expense_stakeholder expense_stakeholder[]
+}
+
+model expense_stakeholder {
+    id            String  @id @default(cuid())
+    percentage    Int
+    expense       expense @relation(fields: [expenseId], references: [id])
+    stakeholder   User    @relation(fields: [stakeholderId], references: [id])
+    stakeholderId String
+    expenseId     String
+}
+
+// Necessary for Next auth
+model Account {
+    id                       String  @id @default(cuid())
+    userId                   String
+    type                     String
+    provider                 String
+    providerAccountId        String
+    refresh_token            String? // @db.Text
+    access_token             String? // @db.Text
+    expires_at               Int?
+    token_type               String?
+    scope                    String?
+    id_token                 String? // @db.Text
+    session_state            String?
+    user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+    refresh_token_expires_in Int?
+
+    @@unique([provider, providerAccountId])
+}
+
+model Session {
+    id           String   @id @default(cuid())
+    sessionToken String   @unique
+    userId       String
+    expires      DateTime
+    user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+    id                  String                @id @default(cuid())
+    name                String?
+    email               String?               @unique
+    emailVerified       DateTime?
+    image               String?
+    accounts            Account[]
+    sessions            Session[]
+    myTrip              Trip[]                @relation("owner")
+    trips               Trip[]                @relation("members")
+    my_expense          expense[]             @relation("expense_owner")
+    expense_stakeholder expense_stakeholder[]
+}
