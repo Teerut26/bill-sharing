@@ -41,14 +41,14 @@ CREATE TABLE "expense" (
 
 -- CreateTable
 CREATE TABLE "expense_stakeholder" (
-    "id" TEXT NOT NULL,
     "percentage" DOUBLE PRECISION NOT NULL,
     "stakeholderId" TEXT NOT NULL,
     "expenseId" TEXT NOT NULL,
+    "paid" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "expense_stakeholder_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "expense_stakeholder_pkey" PRIMARY KEY ("stakeholderId","expenseId")
 );
 
 -- CreateTable
@@ -134,7 +134,7 @@ ALTER TABLE "expense" ADD CONSTRAINT "expense_ownerId_fkey" FOREIGN KEY ("ownerI
 ALTER TABLE "expense_stakeholder" ADD CONSTRAINT "expense_stakeholder_expenseId_fkey" FOREIGN KEY ("expenseId") REFERENCES "expense"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "expense_stakeholder" ADD CONSTRAINT "expense_stakeholder_stakeholderId_fkey" FOREIGN KEY ("stakeholderId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "expense_stakeholder" ADD CONSTRAINT "expense_stakeholder_stakeholderId_fkey" FOREIGN KEY ("stakeholderId") REFERENCES "User"("email") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Account" ADD CONSTRAINT "Account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
