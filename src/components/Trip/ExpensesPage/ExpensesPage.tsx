@@ -1,5 +1,6 @@
 import { api } from "@/utils/api";
 import {
+  ActionIcon,
   Avatar,
   Badge,
   Button,
@@ -13,7 +14,7 @@ import {
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
-import { IconPlus } from "@tabler/icons-react";
+import { IconCheck, IconPlus, IconX } from "@tabler/icons-react";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 import ExpensesForm from "./ExpensesForm/ExpensesForm";
@@ -30,6 +31,8 @@ export default function ExpensesPage(props: Props) {
   const deleteExpenseApi = api.tripRouter.deleteExpense.useMutation();
   const createExpenseApi = api.tripRouter.createExpense.useMutation();
   const editExpenseApi = api.expenseRouter.editExpense.useMutation();
+  const paidExpenseApi = api.expenseRouter.paidExpense.useMutation();
+  const unPaidExpenseApi = api.expenseRouter.unPaidExpense.useMutation();
   const getExpensesApi = api.tripRouter.getExpenses.useQuery({
     trip_id: props.trip_id ?? "",
   });
@@ -69,6 +72,154 @@ export default function ExpensesPage(props: Props) {
     void getTripApi.refetch();
     void getExpenseApi.refetch();
     void getExpensesApi.refetch();
+  };
+
+  type PaidPayload = NonNullable<
+    typeof getExpenseApi.data
+  >["expense_stakeholder"] extends (infer T)[] | null | undefined
+    ? T
+    : never;
+
+  const isPaid = (expense_stakeholder: PaidPayload) => {
+    modals.openConfirmModal({
+      title: "ตรวจสอบว่าจ่ายแล้ว",
+      centered: true,
+      children: (
+        <Text size="sm">
+          คุณต้องการตรวจว่าจ่ายแล้วหรือไม่{" "}
+          <Badge variant="gradient">
+            {expense_stakeholder.stakeholder.email}{" "}
+            {expense_stakeholder.percentage}%{" "}
+            <NumberFormatter
+              className="font-bold"
+              value={
+                SetForAction?.amount
+                  ? (expense_stakeholder.percentage / 100) * SetForAction.amount
+                  : 0
+              }
+              prefix="฿ "
+              thousandSeparator
+              decimalScale={2}
+            />
+          </Badge>{" "}
+          ใช่หรือไม่
+        </Text>
+      ),
+      labels: { confirm: "จ่ายแล้ว", cancel: "ยกเลิก" },
+      confirmProps: { color: "green" },
+      onConfirm: () => {
+        const keyNotification = notifications.show({
+          title: "ตรวจสอบค่าใช้จ่าย",
+          message: "กำลังตรวจสอบค่าใช้จ่าย",
+          color: "blue",
+          loading: true,
+          autoClose: false,
+        });
+
+        paidExpenseApi.mutate(
+          {
+            expenseId: expense_stakeholder.expenseId,
+            stakeholderId: expense_stakeholder.stakeholderId,
+          },
+          {
+            onSuccess: () => {
+              notifications.update({
+                id: keyNotification,
+                color: "green",
+                title: "ตรวจสอบค่าใช้จ่ายสำเร็จ",
+                message: "ตรวจสอบค่าใช้จ่ายสำเร็จ",
+                loading: false,
+                icon: <IconCheck />,
+                autoClose: 2000,
+              });
+              onReload();
+            },
+            onError: (error) => {
+              notifications.update({
+                id: keyNotification,
+                color: "red",
+                title: "ตรวจสอบค่าใช้จ่ายไม่สำเร็จ",
+                message: error.message,
+                icon: <IconCheck />,
+                loading: false,
+                autoClose: 2000,
+              });
+            },
+          },
+        );
+      },
+    });
+  };
+
+  const onUnPaid = (expense_stakeholder: PaidPayload) => {
+    modals.openConfirmModal({
+      title: "ตรวจสอบว่ายังไม่ได้จ่าย",
+      centered: true,
+      children: (
+        <Text size="sm">
+          คุณต้องการตรวจสอบว่ายังไม่ได้จ่ายหรือไม่{" "}
+          <Badge variant="gradient">
+            {expense_stakeholder.stakeholder.email}{" "}
+            {expense_stakeholder.percentage}%{" "}
+            <NumberFormatter
+              className="font-bold"
+              value={
+                SetForAction?.amount
+                  ? (expense_stakeholder.percentage / 100) * SetForAction.amount
+                  : 0
+              }
+              prefix="฿ "
+              thousandSeparator
+              decimalScale={2}
+            />
+          </Badge>{" "}
+          ใช่หรือไม่
+        </Text>
+      ),
+      labels: { confirm: "ยังไม่ได้จ่ายแล้ว", cancel: "ยกเลิก" },
+      confirmProps: { color: "red" },
+      onConfirm: () => {
+        const keyNotification = notifications.show({
+          title: "ตรวจสอบว่ายังไม่ได้จ่าย",
+          message: "กำลังตรวจสอบว่ายังไม่ได้จ่าย",
+          color: "blue",
+          loading: true,
+          autoClose: false,
+        });
+
+        unPaidExpenseApi.mutate(
+          {
+            expenseId: expense_stakeholder.expenseId,
+            stakeholderId: expense_stakeholder.stakeholderId,
+          },
+          {
+            onSuccess: () => {
+              notifications.update({
+                id: keyNotification,
+                color: "green",
+                title: "ตรวจสอบค่าใช้จ่ายสำเร็จ",
+                message: "ตรวจสอบค่าใช้จ่ายสำเร็จ",
+                loading: false,
+                icon: <IconCheck />,
+                autoClose: 2000,
+              });
+              onReload();
+            },
+            onError: (error) => {
+              notifications.update({
+                id: keyNotification,
+                color: "red",
+                title: "ตรวจสอบค่าใช้จ่ายไม่สำเร็จ",
+                message: error.message,
+                icon: <IconCheck />,
+                loading: false,
+                autoClose: 2000,
+              });
+            },
+          },
+        );
+      },
+    });
   };
 
   return (
@@ -269,25 +420,58 @@ export default function ExpensesPage(props: Props) {
             <div className="flex flex-col gap-2">
               {getExpenseApi.data?.expense_stakeholder.map((item, index) => (
                 <Card px={10} py={3} withBorder key={index}>
-                  <div className="flex items-center gap-2">
-                    <Avatar size={"xs"} src={item.stakeholder.image} />
-                    <Text>{item.stakeholder.email}</Text>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="gradient">
-                      {item.percentage.toFixed(2)}%
-                    </Badge>
-                    <NumberFormatter
-                      className="font-bold"
-                      value={
-                        SetForAction?.amount
-                          ? (item.percentage / 100) * SetForAction.amount
-                          : 0
-                      }
-                      prefix="฿ "
-                      thousandSeparator
-                      decimalScale={2}
-                    />
+                  <div className="flex items-center justify-between">
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-2">
+                        <Avatar size={"xs"} src={item.stakeholder.image} />
+                        <Text>{item.stakeholder.email}</Text>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <NumberFormatter
+                          className="font-bold"
+                          value={
+                            SetForAction?.amount
+                              ? (item.percentage / 100) * SetForAction.amount
+                              : 0
+                          }
+                          prefix="฿ "
+                          thousandSeparator
+                          decimalScale={2}
+                        />
+                        <Badge variant="gradient">
+                          {item.percentage.toFixed(2)}%
+                        </Badge>
+
+                        {item.paid ? (
+                          <Badge color="green">จ่ายแล้ว</Badge>
+                        ) : (
+                          <Badge color="red">ยังไม่จ่าย</Badge>
+                        )}
+                      </div>
+                    </div>
+                    {isOwner && (
+                      <>
+                        {item.paid ? (
+                          <ActionIcon
+                            onClick={() => {
+                              onUnPaid(item);
+                            }}
+                            color="red"
+                          >
+                            <IconX />
+                          </ActionIcon>
+                        ) : (
+                          <ActionIcon
+                            onClick={() => {
+                              isPaid(item);
+                            }}
+                            color="green"
+                          >
+                            <IconCheck />
+                          </ActionIcon>
+                        )}
+                      </>
+                    )}
                   </div>
                 </Card>
               ))}

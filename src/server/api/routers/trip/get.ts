@@ -146,6 +146,9 @@ export const getExpense = protectedProcedure
             include: {
               stakeholder: true,
             },
+            orderBy: {
+              createdAt: "desc",
+            }
           },
         },
       });
