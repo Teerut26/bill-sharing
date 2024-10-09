@@ -15,8 +15,10 @@ import {
   Card,
   Chip,
   Drawer,
+  Group,
   Modal,
   NumberFormatter,
+  SelectProps,
   Skeleton,
   Text,
 } from "@mantine/core";
@@ -91,10 +93,26 @@ export default function ExpensesPage(props: Props) {
     (member) => member.email === session?.user?.email,
   );
 
+  const renderSelectOption: SelectProps["renderOption"] = ({
+    option,
+    checked,
+  }) => {
+    const image_url = (email: string) => {
+        return getTripApi.data?.members?.find(item => item.email === email)?.image
+    }
+    return (
+      <Group flex="1" gap="xs">
+        <Avatar size={"xs"} src={image_url(option.value)} />
+        <div>{option.value}</div>
+      </Group>
+    );
+  };
+
   return (
     <>
       <Modal
         fullScreen={isMobile}
+        size="70%"
         opened={openedAddExpenseModal}
         onClose={closeAddExpenseModal}
         title="เพิ่มค่าใช้จ่าย"
@@ -174,7 +192,7 @@ export default function ExpensesPage(props: Props) {
               )}
 
               {fields.map((field, index) => (
-                <div className="flex items-baseline gap-2" key={field.id}>
+                <div className="flex items-baseline gap-2 w-full" key={field.id}>
                   <ControlledSelect
                     control={createExpenseControl}
                     name={`expense_stakeholder.${index}.user_email`}
@@ -187,6 +205,7 @@ export default function ExpensesPage(props: Props) {
                         value: member.email!,
                         label: member.email!,
                       })),
+                      renderOption: renderSelectOption,
                     }}
                   />
                   <ControlledInputNumber
@@ -195,7 +214,7 @@ export default function ExpensesPage(props: Props) {
                     props={{
                       placeholder: "กรอกเปอร์เซ็นต์",
                       required: true,
-                      w: 200,
+                      w: 300,
                       leftSection: "%",
                     }}
                   />

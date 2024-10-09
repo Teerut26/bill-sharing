@@ -21,6 +21,8 @@ import { db } from "@/server/db";
 import { getToken } from "next-auth/jwt";
 import { env } from "@/env";
 import MembersPage from "@/components/Trip/MembersPage/MembersPage";
+import { modals } from "@mantine/modals";
+import SettingPage from "@/components/Trip/SettingPage/SettingPage";
 
 export default function Trip(
   props: InferGetServerSidePropsType<typeof getServerSideProps>,
@@ -82,17 +84,28 @@ export default function Trip(
                   <Button
                     loading={joinTripApi.isPending}
                     onClick={() => {
-                      if (!props.id) {
-                        return;
-                      }
-                      joinTripApi.mutate(
-                        { trip_id: props.id },
-                        {
-                          onSuccess: () => {
-                            void getTripApi.refetch();
-                          },
+                      modals.openConfirmModal({
+                        title: "เข้าร่วมทริป",
+                        children: (
+                          <Text size="sm">
+                            คุณต้องการเข้าร่วมทริปนี้ใช่หรือไม่
+                          </Text>
+                        ),
+                        labels: { confirm: "เข้าร่วม", cancel: "ยกเลิก" },
+                        onConfirm: () => {
+                          if (!props.id) {
+                            return;
+                          }
+                          joinTripApi.mutate(
+                            { trip_id: props.id },
+                            {
+                              onSuccess: () => {
+                                void getTripApi.refetch();
+                              },
+                            },
+                          );
                         },
-                      );
+                      });
                     }}
                   >
                     เข้าร่วม
@@ -131,9 +144,9 @@ export default function Trip(
             <Tabs.Panel value="stakeholders" pt="xs">
               <MembersPage trip_id={props.id!} />
             </Tabs.Panel>
-            {/* <Tabs.Panel value="" pt="xs">
-              <MembersPage trip_id={props.id!} />
-            </Tabs.Panel> */}
+            <Tabs.Panel value="settings" pt="xs">
+              <SettingPage trip_id={props.id!} />
+            </Tabs.Panel>
           </Tabs>
         </div>
       )}

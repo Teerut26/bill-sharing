@@ -17,3 +17,19 @@ export const deleteExpense = protectedProcedure
       }
     }
   });
+
+export const deleteTrip = protectedProcedure
+  .input(z.object({ trip_id: z.string() }))
+  .mutation(async ({ input, ctx }) => {
+    try {
+      return await ctx.db.trip.delete({
+        where: {
+          id: input.trip_id,
+        },
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+    }
+  });

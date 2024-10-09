@@ -8,6 +8,7 @@ import {
   TextInput,
 } from "@mantine/core";
 import { IconPlus } from "@tabler/icons-react";
+import { GetServerSidePropsContext } from "next";
 import Link from "next/link";
 
 export default function Index() {
@@ -31,14 +32,18 @@ export default function Index() {
             >
               <Text size="lg">{item.name}</Text>
               <div className="flex items-center justify-between md:flex-col-reverse md:items-start md:gap-2">
-                {item.members ? <Avatar.Group>
-                  {item.members.slice(0, 3).map((member, index) => (
-                    <Avatar key={index} size={"md"} src={member.image} />
-                  ))}
-                  {item.members.length > 3 && (
-                    <Avatar>{item.members.length - 3}</Avatar>
-                  )}
-                </Avatar.Group> : <Avatar></Avatar>}
+                {item.members ? (
+                  <Avatar.Group>
+                    {item.members.slice(0, 3).map((member, index) => (
+                      <Avatar key={index} size={"md"} src={member.image} />
+                    ))}
+                    {item.members.length > 3 && (
+                      <Avatar>{item.members.length - 3}</Avatar>
+                    )}
+                  </Avatar.Group>
+                ) : (
+                  <Avatar></Avatar>
+                )}
                 {!item.password ? (
                   <NumberFormatter
                     suffix=" บาท"

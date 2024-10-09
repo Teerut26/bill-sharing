@@ -1,10 +1,12 @@
 import BackButton from "@/components/BackButton/BackButton";
 import { db } from "@/server/db";
 import { api } from "@/utils/api";
-import { Button, Card, PasswordInput } from "@mantine/core";
+import { Avatar, Button, PasswordInput, Text } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next";
-import { getToken } from "next-auth/jwt";
+import {
+  type GetServerSidePropsContext,
+  type InferGetServerSidePropsType,
+} from "next";
 import { useRef } from "react";
 
 export default function Password(
@@ -76,7 +78,18 @@ export default function Password(
   return (
     <div className="flex flex-col gap-2">
       <BackButton label="กลับไปหน้ารายการทริป" href={`/trip`} />
-      <div>asdf</div>
+      <div className="flex flex-col gap-1">
+        <div>{props.trip?.name}</div>
+        <div className="flex items-center gap-1">
+          <Text c="dimmed" size="xs">
+            by
+          </Text>
+          <Avatar size={"xs"} src={props.trip?.owner.image} />
+          <Text c="dimmed" size="xs">
+            {props.trip?.owner.email}
+          </Text>
+        </div>
+      </div>
       <form className="flex flex-col gap-2" onSubmit={handleSubmit}>
         <PasswordInput
           ref={passwordRef}
@@ -90,10 +103,25 @@ export default function Password(
 }
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
+  const trip = await db.trip.findUnique({
+    where: {
+      id: context.query.id?.toString(),
+    },
+    select: {
+      name: true,
+      owner: {
+        select: {
+          email: true,
+          image: true,
+        },
+      },
+    },
+  });
   return {
     props: {
       id: context.query.id?.toString(),
       callbackUrl: context.query.callbackUrl?.toString(),
+      trip: trip,
     },
   };
 }
