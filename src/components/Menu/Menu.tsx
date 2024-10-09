@@ -1,8 +1,4 @@
-import {
-  IconLogout,
-  IconLogin2,
-  IconBriefcase,
-} from "@tabler/icons-react";
+import { IconLogout, IconLogin2, IconBriefcase } from "@tabler/icons-react";
 import classes from "./Menu.module.css";
 import clsx from "clsx";
 import { Button, Card } from "@mantine/core";
@@ -10,9 +6,7 @@ import { signOut, useSession } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 
-const data = [
-  { link: "/trip", label: "ทริป", icon: IconBriefcase },
-];
+const data = [{ link: "/trip", label: "ทริป", icon: IconBriefcase }];
 
 export function Menu() {
   const pathname = usePathname();
@@ -59,9 +53,8 @@ export function Menu() {
         </Card>
       ) : (
         <div className={classes.footer}>
-          <Link href="/auth/sign-in">
+          <Link href="/sign-in">
             <Button
-              onClick={() => navigate.push("/auth/sign-in")}
               justify="start"
               variant={"subtle"}
               fullWidth
