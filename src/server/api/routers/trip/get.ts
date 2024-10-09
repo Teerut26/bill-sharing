@@ -147,8 +147,8 @@ export const getExpense = protectedProcedure
               stakeholder: true,
             },
             orderBy: {
-              createdAt: "desc",
-            }
+              stakeholderId: "desc",
+            },
           },
         },
       });
