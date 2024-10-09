@@ -65,6 +65,7 @@ model expense_stakeholder {
     stakeholder   User    @relation(fields: [stakeholderId], references: [id])
     stakeholderId String
     expenseId     String
+    paid          Boolean @default(false)
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
