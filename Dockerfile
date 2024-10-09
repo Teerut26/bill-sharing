@@ -35,8 +35,8 @@ FROM --platform=linux/amd64 node:20-alpine AS runner
 RUN apk add --no-cache \
     udev \
     ttf-freefont \
-    chromium \
-    yarn global add pnpm
+    chromium
+RUN yarn global add pnpm
 WORKDIR /app
 
 ENV NODE_ENV production
