@@ -11,6 +11,7 @@ import {
   ActionIcon,
   Alert,
   Avatar,
+  Badge,
   Button,
   Card,
   Chip,
@@ -98,8 +99,9 @@ export default function ExpensesPage(props: Props) {
     checked,
   }) => {
     const image_url = (email: string) => {
-        return getTripApi.data?.members?.find(item => item.email === email)?.image
-    }
+      return getTripApi.data?.members?.find((item) => item.email === email)
+        ?.image;
+    };
     return (
       <Group flex="1" gap="xs">
         <Avatar size={"xs"} src={image_url(option.value)} />
@@ -107,6 +109,8 @@ export default function ExpensesPage(props: Props) {
       </Group>
     );
   };
+
+  const isOwner = getTripApi.data?.owner?.email === session?.user?.email;
 
   return (
     <>
@@ -192,7 +196,10 @@ export default function ExpensesPage(props: Props) {
               )}
 
               {fields.map((field, index) => (
-                <div className="flex items-baseline gap-2 w-full" key={field.id}>
+                <div
+                  className="flex w-full items-baseline gap-2"
+                  key={field.id}
+                >
                   <ControlledSelect
                     control={createExpenseControl}
                     name={`expense_stakeholder.${index}.user_email`}
@@ -246,74 +253,94 @@ export default function ExpensesPage(props: Props) {
         title="ดำเนินการ"
       >
         <div className="flex flex-col gap-3">
-          <Button>แก้ไข</Button>
-          <Button
-            onClick={() => {
-              modals.openConfirmModal({
-                title: "ลบค่าใช้จ่าย",
-                centered: true,
-                children: (
-                  <Text size="sm">
-                    คุณต้องการลบค่าใช้จ่าย <strong>{SetForAction?.name}</strong>{" "}
-                    ใช่หรือไม่
-                  </Text>
-                ),
-                labels: { confirm: "ลบ", cancel: "ยกเลิก" },
-                confirmProps: { color: "red" },
-                onConfirm: () => {
-                  if (!getExpenseApi.data?.id) {
-                    notifications.show({
-                      title: "ลบค่าใช้จ่ายไม่สําเร็จ",
-                      message: "ไม่พบค่าใช้จ่ายที่ต้องการลบ",
-                      loading: false,
-                      autoClose: 3000,
-                      color: "red",
-                    });
-                    return;
-                  }
-                  deleteExpenseApi.mutate(
-                    {
-                      expense_id: getExpenseApi.data?.id,
-                    },
-                    {
-                      onSuccess: () => {
-                        closeActionDrawer();
+          {isOwner && (
+            <>
+              <Button>แก้ไข</Button>
+              <Button
+                onClick={() => {
+                  modals.openConfirmModal({
+                    title: "ลบค่าใช้จ่าย",
+                    centered: true,
+                    children: (
+                      <Text size="sm">
+                        คุณต้องการลบค่าใช้จ่าย{" "}
+                        <strong>{SetForAction?.name}</strong> ใช่หรือไม่
+                      </Text>
+                    ),
+                    labels: { confirm: "ลบ", cancel: "ยกเลิก" },
+                    confirmProps: { color: "red" },
+                    onConfirm: () => {
+                      if (!getExpenseApi.data?.id) {
                         notifications.show({
-                          title: "ลบค่าใช้จ่ายสําเร็จ",
-                          message: "ลบค่าใช้จ่ายสำเร็จแล้ว",
+                          title: "ลบค่าใช้จ่ายไม่สําเร็จ",
+                          message: "ไม่พบค่าใช้จ่ายที่ต้องการลบ",
                           loading: false,
                           autoClose: 3000,
-                          color: "green",
+                          color: "red",
                         });
-                        void getExpensesApi.refetch();
-                      },
+                        return;
+                      }
+                      deleteExpenseApi.mutate(
+                        {
+                          expense_id: getExpenseApi.data?.id,
+                        },
+                        {
+                          onSuccess: () => {
+                            closeActionDrawer();
+                            notifications.show({
+                              title: "ลบค่าใช้จ่ายสําเร็จ",
+                              message: "ลบค่าใช้จ่ายสำเร็จแล้ว",
+                              loading: false,
+                              autoClose: 3000,
+                              color: "green",
+                            });
+                            void getExpensesApi.refetch();
+                          },
+                        },
+                      );
                     },
-                  );
-                },
-              });
-            }}
-            loading={deleteExpenseApi.isPending}
-            color="red"
-          >
-            ลบ
-          </Button>
+                  });
+                }}
+                loading={deleteExpenseApi.isPending}
+                color="red"
+              >
+                ลบ
+              </Button>
+            </>
+          )}
           <Card className="flex flex-col gap-1" px={0}>
             <Text size="lg">{SetForAction?.name}</Text>
             <div className="flex flex-col">
               <NumberFormatter
-                suffix=" บาท"
+                prefix="฿ "
                 value={SetForAction?.amount}
                 thousandSeparator
+
                 className="text-2xl font-bold"
               />
             </div>
             <div className="flex flex-col gap-2">
               {getExpenseApi.data?.expense_stakeholder.map((item, index) => (
-                <div className="flex items-center gap-2" key={index}>
-                  <Avatar size={"xs"} src={item.stakeholder.image} />
-                  <Text>{item.stakeholder.email}</Text>
-                  <Chip size="xs">{item.percentage}%</Chip>
-                </div>
+                <Card px={10} py={3} withBorder key={index}>
+                  <div className="flex items-center gap-2">
+                    <Avatar size={"xs"} src={item.stakeholder.image} />
+                    <Text>{item.stakeholder.email}</Text>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="gradient">{item.percentage.toFixed(2)}%</Badge>
+                    <NumberFormatter
+                      className="font-bold"
+                      value={
+                        SetForAction?.amount
+                          ? (item.percentage / 100) * SetForAction.amount
+                          : 0
+                      }
+                      prefix="฿ "
+                      thousandSeparator
+                      decimalScale={2}
+                    />
+                  </div>
+                </Card>
               ))}
             </div>
           </Card>
@@ -340,10 +367,8 @@ export default function ExpensesPage(props: Props) {
                 key={index}
                 withBorder
                 onClick={() => {
-                  if (item.owner.email === session?.user.email) {
-                    setSetForAction(item);
-                    openActionDrawer();
-                  }
+                  setSetForAction(item);
+                  openActionDrawer();
                 }}
                 className="flex flex-col hover:cursor-pointer"
               >
