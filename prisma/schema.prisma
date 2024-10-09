@@ -15,37 +15,59 @@ datasource db {
 }
 
 model Trip {
-    id         String    @id @default(cuid())
+    id         String       @id @default(cuid())
     name       String
     location   String?
     start_date DateTime?
     end_date   DateTime?
-    owner      User      @relation("owner", fields: [ownerId], references: [id], onDelete: Cascade)
+    owner      User         @relation("owner", fields: [ownerId], references: [id], onDelete: Cascade)
     ownerId    String
-    members    User[]    @relation("members")
+    members    User[]       @relation("members")
     expense    expense[]
-    isPublic   Boolean   @default(true)
+    isPublic   Boolean      @default(true)
     password   String?
+    inviteLink InviteLink[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model InviteLink {
+    id      String @id @default(cuid())
+    url     String @unique @default(uuid())
+    trip    Trip   @relation(fields: [tripId], references: [id], onDelete: Cascade)
+    tripId  String
+    owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+    ownerId String
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
 
 model expense {
     id                  String                @id @default(cuid())
     name                String
-    amount              Int
+    amount              Float
     tripId              String
     trip                Trip                  @relation(fields: [tripId], references: [id], onDelete: Cascade)
     owner               User                  @relation("expense_owner", fields: [ownerId], references: [id], onDelete: Cascade)
     ownerId             String
     expense_stakeholder expense_stakeholder[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
 
 model expense_stakeholder {
     id            String  @id @default(cuid())
-    percentage    Int
-    expense       expense @relation(fields: [expenseId], references: [id])
+    percentage    Float
+    expense       expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
     stakeholder   User    @relation(fields: [stakeholderId], references: [id])
     stakeholderId String
     expenseId     String
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
 
 // Necessary for Next auth
@@ -88,4 +110,5 @@ model User {
     trips               Trip[]                @relation("members")
     my_expense          expense[]             @relation("expense_owner")
     expense_stakeholder expense_stakeholder[]
+    inviteLink          InviteLink[]
 }

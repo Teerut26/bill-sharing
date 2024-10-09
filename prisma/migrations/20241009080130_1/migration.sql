@@ -8,17 +8,33 @@ CREATE TABLE "Trip" (
     "ownerId" TEXT NOT NULL,
     "isPublic" BOOLEAN NOT NULL DEFAULT true,
     "password" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Trip_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "InviteLink" (
+    "id" TEXT NOT NULL,
+    "url" TEXT NOT NULL,
+    "tripId" TEXT NOT NULL,
+    "ownerId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "InviteLink_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "expense" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "amount" INTEGER NOT NULL,
+    "amount" DOUBLE PRECISION NOT NULL,
     "tripId" TEXT NOT NULL,
     "ownerId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "expense_pkey" PRIMARY KEY ("id")
 );
@@ -26,9 +42,11 @@ CREATE TABLE "expense" (
 -- CreateTable
 CREATE TABLE "expense_stakeholder" (
     "id" TEXT NOT NULL,
-    "percentage" INTEGER NOT NULL,
+    "percentage" DOUBLE PRECISION NOT NULL,
     "stakeholderId" TEXT NOT NULL,
     "expenseId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "expense_stakeholder_pkey" PRIMARY KEY ("id")
 );
@@ -80,6 +98,9 @@ CREATE TABLE "_members" (
 );
 
 -- CreateIndex
+CREATE UNIQUE INDEX "InviteLink_url_key" ON "InviteLink"("url");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Account_provider_providerAccountId_key" ON "Account"("provider", "providerAccountId");
 
 -- CreateIndex
@@ -98,13 +119,19 @@ CREATE INDEX "_members_B_index" ON "_members"("B");
 ALTER TABLE "Trip" ADD CONSTRAINT "Trip_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "InviteLink" ADD CONSTRAINT "InviteLink_tripId_fkey" FOREIGN KEY ("tripId") REFERENCES "Trip"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "InviteLink" ADD CONSTRAINT "InviteLink_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "expense" ADD CONSTRAINT "expense_tripId_fkey" FOREIGN KEY ("tripId") REFERENCES "Trip"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "expense" ADD CONSTRAINT "expense_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "expense_stakeholder" ADD CONSTRAINT "expense_stakeholder_expenseId_fkey" FOREIGN KEY ("expenseId") REFERENCES "expense"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "expense_stakeholder" ADD CONSTRAINT "expense_stakeholder_expenseId_fkey" FOREIGN KEY ("expenseId") REFERENCES "expense"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "expense_stakeholder" ADD CONSTRAINT "expense_stakeholder_stakeholderId_fkey" FOREIGN KEY ("stakeholderId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -15,6 +15,7 @@ import "@mantine/dates/styles.css";
 import "@mantine/core/styles.layer.css";
 import "mantine-datatable/styles.layer.css";
 import { api } from "@/utils/api";
+import { ModalsProvider } from "@mantine/modals";
 
 const themeMantine = createTheme({
   fontFamily: "Anuphan",
@@ -42,11 +43,13 @@ const MyApp: AppType = ({ Component, pageProps }) => {
   return (
     <SessionProvider>
       <MantineProvider theme={themeMantine}>
-        <NavigationProgress />
-        <Notifications position="top-right" />
-        <AppLayout>
-          <Component {...pageProps} />
-        </AppLayout>
+        <ModalsProvider>
+          <NavigationProgress />
+          <Notifications position="top-right" />
+          <AppLayout>
+            <Component {...pageProps} />
+          </AppLayout>
+        </ModalsProvider>
       </MantineProvider>
     </SessionProvider>
   );
