@@ -35,6 +35,10 @@ export default function Trip(
     (member) => member.email === session?.user?.email,
   );
 
+  const onReload = () => {
+    void getTripApi.refetch();
+  };
+
   return (
     <>
       {getTripApi.isLoading ? (
@@ -139,13 +143,13 @@ export default function Trip(
             </Tabs.List>
 
             <Tabs.Panel value="expenses" pt="xs">
-              <ExpensesPage trip_id={props.id!} />
+              <ExpensesPage onReload={onReload} trip_id={props.id!} />
             </Tabs.Panel>
             <Tabs.Panel value="stakeholders" pt="xs">
-              <MembersPage trip_id={props.id!} />
+              <MembersPage onReload={onReload} trip_id={props.id!} />
             </Tabs.Panel>
             <Tabs.Panel value="settings" pt="xs">
-              <SettingPage trip_id={props.id!} />
+              <SettingPage onReload={onReload} trip_id={props.id!} />
             </Tabs.Panel>
           </Tabs>
         </div>

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 
 interface Props {
   trip_id: string;
+  onReload?: () => void;
 }
 
 export default function SettingPage(props: Props) {

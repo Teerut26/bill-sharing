@@ -16,9 +16,9 @@ export const createTrip = protectedProcedure
           },
           members: {
             connect: [
-                {
-                    email: ctx.session.user.email!,
-                }
+              {
+                email: ctx.session.user.email!,
+              },
             ],
           },
         },

@@ -1,35 +1,13 @@
-import ControlledInputNumber from "@/components/Controlled/ControlledInputNumber";
-import ControlledInputText from "@/components/Controlled/ControlledInputText";
-import ControlledSelect from "@/components/Controlled/ControlledSelect";
-import {
-  createExpenseSchema,
-  type CreateExpenseSchemaType,
-} from "@/schemas/create-expense.schema";
 import { api } from "@/utils/api";
-import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  ActionIcon,
-  Alert,
   Avatar,
-  Button,
   Card,
-  Chip,
-  Drawer,
-  Modal,
-  NumberFormatter,
   Skeleton,
-  Text,
 } from "@mantine/core";
-import { useDisclosure, useMediaQuery } from "@mantine/hooks";
-import { modals } from "@mantine/modals";
-import { notifications } from "@mantine/notifications";
-import { IconTrash, IconPlus } from "@tabler/icons-react";
-import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
-import { useFieldArray, useForm } from "react-hook-form";
 
 interface Props {
   trip_id: string;
+  onReload?: () => void;
 }
 
 export default function MembersPage(props: Props) {

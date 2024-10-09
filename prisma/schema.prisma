@@ -59,16 +59,17 @@ model expense {
 }
 
 model expense_stakeholder {
-    id            String  @id @default(cuid())
     percentage    Float
     expense       expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
-    stakeholder   User    @relation(fields: [stakeholderId], references: [id])
+    stakeholder   User    @relation(fields: [stakeholderId], references: [email])
     stakeholderId String
     expenseId     String
     paid          Boolean @default(false)
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+
+    @@id([stakeholderId, expenseId])
 }
 
 // Necessary for Next auth

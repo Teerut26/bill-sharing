@@ -1,38 +1,26 @@
-import ControlledInputNumber from "@/components/Controlled/ControlledInputNumber";
-import ControlledInputText from "@/components/Controlled/ControlledInputText";
-import ControlledSelect from "@/components/Controlled/ControlledSelect";
-import {
-  createExpenseSchema,
-  type CreateExpenseSchemaType,
-} from "@/schemas/create-expense.schema";
 import { api } from "@/utils/api";
-import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  ActionIcon,
-  Alert,
   Avatar,
   Badge,
   Button,
   Card,
-  Chip,
   Drawer,
-  Group,
   Modal,
   NumberFormatter,
-  SelectProps,
   Skeleton,
   Text,
 } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
-import { IconTrash, IconPlus } from "@tabler/icons-react";
+import { IconPlus } from "@tabler/icons-react";
 import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
-import { useFieldArray, useForm } from "react-hook-form";
+import { useState } from "react";
+import ExpensesForm from "./ExpensesForm/ExpensesForm";
 
 interface Props {
   trip_id: string;
+  onReload?: () => void;
 }
 
 export default function ExpensesPage(props: Props) {
@@ -40,10 +28,11 @@ export default function ExpensesPage(props: Props) {
   const getTripApi = api.tripRouter.getTrip.useQuery(props.trip_id ?? "");
   const isMobile = useMediaQuery("(max-width: 768px)");
   const deleteExpenseApi = api.tripRouter.deleteExpense.useMutation();
+  const createExpenseApi = api.tripRouter.createExpense.useMutation();
+  const editExpenseApi = api.expenseRouter.editExpense.useMutation();
   const getExpensesApi = api.tripRouter.getExpenses.useQuery({
     trip_id: props.trip_id ?? "",
   });
-  const createExpenseApi = api.tripRouter.createExpense.useMutation();
 
   const [
     openedActionDrawer,
@@ -53,67 +42,96 @@ export default function ExpensesPage(props: Props) {
     openedAddExpenseModal,
     { open: openAddExpenseModal, close: closeAddExpenseModal },
   ] = useDisclosure(false);
-
-  const {
-    control: createExpenseControl,
-    setValue: setCreateExpenseValue,
-    handleSubmit: createExpenseSubmit,
-    reset: createExpenseReset,
-    formState: { errors: createExpenseErrors },
-  } = useForm<CreateExpenseSchemaType>({
-    resolver: zodResolver(createExpenseSchema),
-  });
-
-  const { fields, append, remove } = useFieldArray({
-    control: createExpenseControl, // control props comes from useForm (optional: if you are using FormProvider)
-    name: "expense_stakeholder", // unique name for your Field Array
-  });
+  const [
+    openedEditExpenseModal,
+    { open: openEditExpenseModal, close: closeEditExpenseModal },
+  ] = useDisclosure(false);
 
   type ExpenseType = NonNullable<
     typeof getExpensesApi.data
   >["expenses"] extends (infer T)[] | null | undefined
     ? T
     : never;
-  const [keyForm, setKeyForm] = useState(0);
   const [SetForAction, setSetForAction] = useState<ExpenseType>();
 
   const getExpenseApi = api.tripRouter.getExpense.useQuery({
     expense_id: SetForAction?.id ?? "",
   });
 
-  useEffect(() => {
-    for (let index = 0; index < fields.length; index++) {
-      setCreateExpenseValue(
-        `expense_stakeholder.${index}.percentage`,
-        100 / fields.length,
-      );
-    }
-  }, [fields.length, setCreateExpenseValue]);
-
   const isMember = getTripApi.data?.members?.some(
     (member) => member.email === session?.user?.email,
   );
 
-  const renderSelectOption: SelectProps["renderOption"] = ({
-    option,
-    checked,
-  }) => {
-    const image_url = (email: string) => {
-      return getTripApi.data?.members?.find((item) => item.email === email)
-        ?.image;
-    };
-    return (
-      <Group flex="1" gap="xs">
-        <Avatar size={"xs"} src={image_url(option.value)} />
-        <div>{option.value}</div>
-      </Group>
-    );
-  };
-
   const isOwner = getTripApi.data?.owner?.email === session?.user?.email;
+
+  const onReload = () => {
+    props.onReload?.();
+    void getTripApi.refetch();
+    void getExpenseApi.refetch();
+    void getExpensesApi.refetch();
+  };
 
   return (
     <>
+      <Modal
+        fullScreen={isMobile}
+        size="70%"
+        opened={openedEditExpenseModal}
+        onClose={closeEditExpenseModal}
+        title="แก้ไขค่าใช้จ่าย"
+      >
+        <ExpensesForm
+          mode="edit"
+          onFinish={(d) => {
+            if (!getExpenseApi.data?.id) {
+              return;
+            }
+
+            const keyNotification = notifications.show({
+              title: "แก้ไขค่าใช้จ่าย",
+              message: "กําลังแก้ไขค่าใช้จ่าย",
+              color: "blue",
+              loading: true,
+              autoClose: false,
+            });
+
+            editExpenseApi.mutate(
+              {
+                ...d,
+                expense_id: getExpenseApi.data?.id ?? "",
+              },
+              {
+                onSuccess: () => {
+                  notifications.update({
+                    id: keyNotification,
+                    color: "green",
+                    title: "แก้ไขค่าใช้จ่ายสำเร็จ",
+                    message: "แก้ไขค่าใช้จ่ายสำเร็จแล้ว",
+                    loading: false,
+                    autoClose: 3000,
+                    disallowClose: true,
+                  });
+                  closeEditExpenseModal();
+                  onReload();
+                },
+                onError: () => {
+                  notifications.update({
+                    id: keyNotification,
+                    color: "red",
+                    title: "แก้ไขค่าใช้จ่ายไม่สำเร็จ",
+                    message: "แก้ไขค่าใช้จ่ายไม่สำเร็จ",
+                    loading: false,
+                    autoClose: 3000,
+                    disallowClose: true,
+                  });
+                },
+              },
+            );
+          }}
+          data={getExpenseApi.data}
+          members={getTripApi.data?.members ?? []}
+        />
+      </Modal>
       <Modal
         fullScreen={isMobile}
         size="70%"
@@ -121,15 +139,16 @@ export default function ExpensesPage(props: Props) {
         onClose={closeAddExpenseModal}
         title="เพิ่มค่าใช้จ่าย"
       >
-        <form
-          key={keyForm}
-          onSubmit={createExpenseSubmit((d) => {
+        <ExpensesForm
+          mode="create"
+          members={getTripApi.data?.members ?? []}
+          onFinish={(d) => {
             const keyNotification = notifications.show({
-              title: "กําลังสร้างค่าใช้จ่าย",
+              title: "เพิ่มค่าใช้จ่าย",
+              message: "กําลังเพิ่มค่าใช้จ่าย",
+              color: "blue",
               loading: true,
               autoClose: false,
-              disallowClose: true,
-              message: "กรุณารอสักครู่...",
             });
             createExpenseApi.mutate(
               {
@@ -139,108 +158,30 @@ export default function ExpensesPage(props: Props) {
               {
                 onSuccess: () => {
                   notifications.update({
+                    id: keyNotification,
                     color: "green",
-                    title: "สร้างค่าใช้จ่ายสําเร็จ",
-                    message: "ค่าใช้จ่ายของคุณถูกสร้างเรียบร้อยแล้ว",
+                    title: "เพิ่มค่าใช้จ่ายสำเร็จ",
+                    message: "เพิ่มค่าใช้จ่ายสำเร็จแล้ว",
                     loading: false,
                     autoClose: 3000,
-                    id: keyNotification,
                   });
-                  setKeyForm((prev) => prev + 1);
+                  onReload();
                   closeAddExpenseModal();
-                  void getExpensesApi.refetch();
                 },
                 onError: (error) => {
                   notifications.update({
+                    id: keyNotification,
                     color: "red",
-                    title: "สร้างค่าใช้จ่ายไม่สําเร็จ",
+                    title: "เพิ่มค่าใช้จ่ายไม่สําเร็จ",
                     message: error.message,
                     loading: false,
                     autoClose: 3000,
-                    id: keyNotification,
                   });
                 },
               },
             );
-            console.log(d);
-          })}
-        >
-          <div className="flex flex-col gap-2">
-            <ControlledInputText
-              control={createExpenseControl}
-              name="name"
-              props={{
-                label: "ชื่อค่าใช้จ่าย",
-                placeholder: "กรอกชื่อค่าใช้จ่าย",
-                required: true,
-                size: "md",
-              }}
-            />
-            <ControlledInputNumber
-              control={createExpenseControl}
-              name="amount"
-              props={{
-                label: "จำนวนเงิน",
-                placeholder: "กรอกจำนวนเงิน",
-                required: true,
-                thousandSeparator: true,
-                size: "md",
-              }}
-            />
-            <div className="mt-5 flex flex-col items-center gap-2">
-              <Text size="md">สมาชิก</Text>
-              {createExpenseErrors.expense_stakeholder?.root?.message && (
-                <Alert variant="light" color="red" title="เกิดข้อผิดพลาด">
-                  {createExpenseErrors.expense_stakeholder?.root?.message}
-                </Alert>
-              )}
-
-              {fields.map((field, index) => (
-                <div
-                  className="flex w-full items-baseline gap-2"
-                  key={field.id}
-                >
-                  <ControlledSelect
-                    control={createExpenseControl}
-                    name={`expense_stakeholder.${index}.user_email`}
-                    props={{
-                      placeholder: "เลือกสมาชิก",
-                      required: true,
-                      w: "100%",
-                      withAsterisk: true,
-                      data: getTripApi.data?.members?.map((member) => ({
-                        value: member.email!,
-                        label: member.email!,
-                      })),
-                      renderOption: renderSelectOption,
-                    }}
-                  />
-                  <ControlledInputNumber
-                    control={createExpenseControl}
-                    name={`expense_stakeholder.${index}.percentage`}
-                    props={{
-                      placeholder: "กรอกเปอร์เซ็นต์",
-                      required: true,
-                      w: 300,
-                      leftSection: "%",
-                    }}
-                  />
-                  <ActionIcon variant="default" onClick={() => remove(index)}>
-                    <IconTrash size={17} />
-                  </ActionIcon>
-                </div>
-              ))}
-              <ActionIcon
-                variant="default"
-                onClick={() => append({ user_email: "", percentage: 100 })}
-              >
-                <IconPlus size={17} />
-              </ActionIcon>
-            </div>
-
-            <Button type="submit">บันทึก</Button>
-          </div>
-        </form>
+          }}
+        />
       </Modal>
       <Drawer
         size="60%"
@@ -255,7 +196,14 @@ export default function ExpensesPage(props: Props) {
         <div className="flex flex-col gap-3">
           {isOwner && (
             <>
-              <Button>แก้ไข</Button>
+              <Button
+                onClick={() => {
+                  closeActionDrawer();
+                  openEditExpenseModal();
+                }}
+              >
+                แก้ไข
+              </Button>
               <Button
                 onClick={() => {
                   modals.openConfirmModal({
@@ -294,7 +242,7 @@ export default function ExpensesPage(props: Props) {
                               autoClose: 3000,
                               color: "green",
                             });
-                            void getExpensesApi.refetch();
+                            onReload();
                           },
                         },
                       );
@@ -315,7 +263,6 @@ export default function ExpensesPage(props: Props) {
                 prefix="฿ "
                 value={SetForAction?.amount}
                 thousandSeparator
-
                 className="text-2xl font-bold"
               />
             </div>
@@ -327,7 +274,9 @@ export default function ExpensesPage(props: Props) {
                     <Text>{item.stakeholder.email}</Text>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge variant="gradient">{item.percentage.toFixed(2)}%</Badge>
+                    <Badge variant="gradient">
+                      {item.percentage.toFixed(2)}%
+                    </Badge>
                     <NumberFormatter
                       className="font-bold"
                       value={
