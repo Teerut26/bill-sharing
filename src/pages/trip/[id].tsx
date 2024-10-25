@@ -68,9 +68,10 @@ export default function Trip(
                 <Text size="lg">{getTripApi.data?.name}</Text>
                 <div className="flex flex-col">
                   <NumberFormatter
-                    suffix=" บาท"
-                    value={getTripApi.data?.total_expense}
+                    prefix="฿ "
+                    value={getTripApi.data?.total_expense.toFixed(2)}
                     thousandSeparator
+                    className="text-2xl font-bold"
                   />
                   <div className="flex items-center gap-1">
                     <Text c="dimmed" size="xs">

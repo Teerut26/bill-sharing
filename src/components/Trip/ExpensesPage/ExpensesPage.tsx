@@ -11,12 +11,15 @@ import {
   Skeleton,
   Text,
 } from "@mantine/core";
+import { format, formatDistance, setDefaultOptions } from "date-fns";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconPlus, IconX } from "@tabler/icons-react";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
+import { th } from "date-fns/locale";
+setDefaultOptions({ locale: th });
 import ExpensesForm from "./ExpensesForm/ExpensesForm";
 
 interface Props {
@@ -508,14 +511,25 @@ export default function ExpensesPage(props: Props) {
                 <div className="flex justify-between">
                   <Text>{item.name}</Text>
                   <NumberFormatter
-                    suffix=" บาท"
-                    value={item.amount}
+                    // suffix=" บาท"
+                    prefix="฿ "
+                    value={item.amount.toFixed(2)}
                     thousandSeparator
                   />
                 </div>
-                <Text c="dimmed" size="xs">
-                  {item.owner.email}
-                </Text>
+                <div className="flex gap-3">
+                  <Text c="dimmed" size="xs" className="flex gap-1">
+                    <div>{format(item.createdAt, "dd/MM/yyyy HH:mm:ss")}</div>
+                    <div>
+                      ({formatDistance(item.createdAt, new Date(), {
+                        addSuffix: true,
+                      })})
+                    </div>
+                  </Text>
+                  {/* <Text c="dimmed" size="xs">
+                    {item.owner.email}
+                  </Text> */}
+                </div>
               </Card>
             ))}
           </div>

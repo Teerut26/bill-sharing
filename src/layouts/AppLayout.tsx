@@ -56,7 +56,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             size="sm"
           />
           <Link href={"/"}>
-            <div className="text-xl font-bold">Construction Planner</div>
+            <div className="text-xl font-bold">Bill Sharing</div>
           </Link>
         </Group>
         {/* {colorScheme === "dark" ? (
