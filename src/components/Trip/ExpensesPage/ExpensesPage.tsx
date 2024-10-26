@@ -21,6 +21,7 @@ import { useState } from "react";
 import { th } from "date-fns/locale";
 setDefaultOptions({ locale: th });
 import ExpensesForm from "./ExpensesForm/ExpensesForm";
+import _ from "lodash";
 
 interface Props {
   trip_id: string;
@@ -510,25 +511,34 @@ export default function ExpensesPage(props: Props) {
               >
                 <div className="flex justify-between">
                   <Text>{item.name}</Text>
-                  <NumberFormatter
-                    // suffix=" บาท"
-                    prefix="฿ "
-                    value={item.amount.toFixed(2)}
-                    thousandSeparator
-                  />
+                  <div className="flex">
+                    <NumberFormatter
+                      value={_.sumBy(
+                        item.expense_stakeholder.filter((v) => v.paid),
+                        (v) => {
+                          return (v.percentage / 100) * item.amount;
+                        },
+                      )}
+                      thousandSeparator
+                    />
+                    /
+                    <NumberFormatter
+                      value={item.amount.toFixed(2)}
+                      thousandSeparator
+                    />
+                  </div>
                 </div>
                 <div className="flex gap-3">
                   <Text c="dimmed" size="xs" className="flex gap-1">
                     <div>{format(item.createdAt, "dd/MM/yyyy HH:mm:ss")}</div>
                     <div>
-                      ({formatDistance(item.createdAt, new Date(), {
+                      (
+                      {formatDistance(item.createdAt, new Date(), {
                         addSuffix: true,
-                      })})
+                      })}
+                      )
                     </div>
                   </Text>
-                  {/* <Text c="dimmed" size="xs">
-                    {item.owner.email}
-                  </Text> */}
                 </div>
               </Card>
             ))}

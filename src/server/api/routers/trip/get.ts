@@ -75,16 +75,25 @@ export const getMembersFromTrip = protectedProcedure
         where: {
           id: input.trip_id,
         },
-        select: {
+        include: {
           members: {
-            select: {
-              email: true,
-              image: true,
+            include: {
+              expense_stakeholder: {
+                select: {
+                  percentage: true,
+                  paid: true,
+                  expense: {
+                    select: {
+                      amount: true,
+                    },
+                  },
+                },
+              },
             },
           },
         },
       });
-      return result?.members;
+      return result;
     } catch (error) {
       if (error instanceof Error) {
         throw new Error(error.message);

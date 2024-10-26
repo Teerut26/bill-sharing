@@ -93,10 +93,11 @@ export default function Password(
       <form className="flex flex-col gap-2" onSubmit={handleSubmit}>
         <PasswordInput
           ref={passwordRef}
+          size="md"
           name="password"
           placeholder="รหัสผ่าน"
         />
-        <Button type="submit">บันทึก</Button>
+        <Button size="md" type="submit">บันทึก</Button>
       </form>
     </div>
   );
