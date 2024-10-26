@@ -96,11 +96,10 @@ export default function ExpensesPage(props: Props) {
             {expense_stakeholder.percentage}%{" "}
             <NumberFormatter
               className="font-bold"
-              value={
-                SetForAction?.amount
-                  ? (expense_stakeholder.percentage / 100) * SetForAction.amount
-                  : 0
-              }
+              value={(SetForAction?.amount
+                ? (expense_stakeholder.percentage / 100) * SetForAction.amount
+                : 0
+              ).toFixed(2)}
               prefix="฿ "
               thousandSeparator
               decimalScale={2}
@@ -167,11 +166,10 @@ export default function ExpensesPage(props: Props) {
             {expense_stakeholder.percentage}%{" "}
             <NumberFormatter
               className="font-bold"
-              value={
-                SetForAction?.amount
-                  ? (expense_stakeholder.percentage / 100) * SetForAction.amount
-                  : 0
-              }
+              value={(SetForAction?.amount
+                ? (expense_stakeholder.percentage / 100) * SetForAction.amount
+                : 0
+              ).toFixed(2)}
               prefix="฿ "
               thousandSeparator
               decimalScale={2}
@@ -518,7 +516,7 @@ export default function ExpensesPage(props: Props) {
                         (v) => {
                           return (v.percentage / 100) * item.amount;
                         },
-                      )}
+                      ).toFixed(2)}
                       thousandSeparator
                     />
                     /

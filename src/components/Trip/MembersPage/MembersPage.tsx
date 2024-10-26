@@ -25,14 +25,14 @@ export default function MembersPage(props: Props) {
                     <NumberFormatter
                       value={_.sumBy(member.expense_stakeholder.filter((v) => v.paid), (v) => {
                         return (v.percentage / 100) * v.expense.amount;
-                      })}
+                      }).toFixed(2)}
                       thousandSeparator
                     />
                     /
                     <NumberFormatter
                       value={_.sumBy(member.expense_stakeholder, (v) => {
                         return (v.percentage / 100) * v.expense.amount;
-                      })}
+                      }).toFixed(2)}
                       thousandSeparator
                     />
                   </div>

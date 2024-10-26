@@ -79,6 +79,11 @@ export const getMembersFromTrip = protectedProcedure
           members: {
             include: {
               expense_stakeholder: {
+                where: {
+                  expense: {
+                    tripId: input.trip_id,
+                  },
+                },
                 select: {
                   percentage: true,
                   paid: true,
