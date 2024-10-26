@@ -93,7 +93,7 @@ export default function ExpensesPage(props: Props) {
           คุณต้องการตรวจว่าจ่ายแล้วหรือไม่{" "}
           <Badge variant="gradient">
             {expense_stakeholder.stakeholder.email}{" "}
-            {expense_stakeholder.percentage}%{" "}
+            {expense_stakeholder.percentage.toFixed(2)}%{" "}
             <NumberFormatter
               className="font-bold"
               value={(SetForAction?.amount
@@ -163,7 +163,7 @@ export default function ExpensesPage(props: Props) {
           คุณต้องการตรวจสอบว่ายังไม่ได้จ่ายหรือไม่{" "}
           <Badge variant="gradient">
             {expense_stakeholder.stakeholder.email}{" "}
-            {expense_stakeholder.percentage}%{" "}
+            {expense_stakeholder.percentage.toFixed(2)}%{" "}
             <NumberFormatter
               className="font-bold"
               value={(SetForAction?.amount
